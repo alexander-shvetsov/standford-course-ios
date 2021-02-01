@@ -9,26 +9,40 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    // change label on click card
+    lazy var game = ConcentrationGame(numberOfCards: (buttonCollection.count + 1) / 2)
+    
     var touches = 0 {
         didSet {
             touchLabel.text = "Touches: \(touches)"
         }
     }
     
-    // change values of card if click on card
-    func flipButton(emoji: String, button: UIButton) {
-        if button.currentTitle == emoji {
-            button.setTitle("", for: .normal)
-            button.backgroundColor = #colorLiteral(red: 0, green: 0.6312296391, blue: 0.8726374507, alpha: 1)
-        } else {
-            button.setTitle(emoji, for: .normal)
-            button.backgroundColor = #colorLiteral(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
+    var emojiCollection = ["🦊", "🐼", "🐽", "🐝", "🪲", "🐰", "🦧", "🦑", "🐳", "🐡", "🦬", "🦚", "⛄️"]
+    
+    var emojiDictionary = [Int: String]()
+    
+    func emojiIdentifier(for card: Card) -> String {
+        if emojiDictionary[card.identifiere] == nil {
+            let randomIndex = Int(arc4random_uniform(UInt32(emojiCollection.count)))
+            emojiDictionary[card.identifiere] = emojiCollection.remove(at: randomIndex)
         }
+        
+        return emojiDictionary[card.identifiere] ?? ""
     }
     
-    // values of cards
-    let emojiCollection = ["🦊", "🐼", "🦊", "🐼"]
+    func updateViewFromModel() {
+        for index in buttonCollection.indices {
+            let button = buttonCollection[index]
+            let card = game.cards[index]
+            if card.isFaceUp {
+                button.setTitle(emojiIdentifier(for: card), for: .normal)
+                button.backgroundColor = #colorLiteral(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
+            } else {
+                button.setTitle("", for: .normal)
+                button.backgroundColor = card.isMatched ? #colorLiteral(red: 1, green: 1, blue: 1, alpha: 0) : #colorLiteral(red: 0, green: 0.5898008943, blue: 1, alpha: 1)
+            }
+        }
+    }
 
     @IBOutlet var buttonCollection: [UIButton]!
     
@@ -36,12 +50,11 @@ class ViewController: UIViewController {
     
     @IBAction func cardButton(_ sender: UIButton) {
         
-        // change label on click card
         touches += 1
         
-        // change value of card if click on card
         if let buttonIndex = buttonCollection.firstIndex(of: sender) {
-            flipButton(emoji: emojiCollection[buttonIndex], button: sender)
+            game.chooseCard(at: buttonIndex)
+            updateViewFromModel()
         }
         
     }
